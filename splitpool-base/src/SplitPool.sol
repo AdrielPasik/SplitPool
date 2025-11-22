@@ -71,7 +71,7 @@ contract SplitPool is ISplitPool, ReentrancyGuard {
     }
 
     /// @notice deposit into the pool (ETH or ERC20)
-    function deposit(uint256 amount) external payable override nonReentrant {
+    function deposit(uint256 amount) external payable override {
         // compatibility: require amount == sharePerUser and redirect to payShare
         if (amount != sharePerUser) revert IncorrectShareAmount(amount, sharePerUser);
         payShare();

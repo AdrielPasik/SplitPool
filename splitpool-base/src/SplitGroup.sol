@@ -105,23 +105,28 @@ contract SplitGroup {
 		if (current >= 0) revert NothingToSettle();
 		// convertir a positivo para comparación
 		uint256 owing = uint256(-current);
-		if (amount > owing) amount = owing; // limitar a lo que realmente debe
+		uint256 payAmount = amount > owing ? owing : amount;
 
 		// transferir
 		if (settlementToken == address(0)) {
-			// pagar en ETH
-			require(msg.value == amount, "Incorrect ETH amount");
-			(bool ok, ) = to.call{value: amount}("");
+			// pagar en ETH, permitir sobrepago y reembolsar exceso
+			require(msg.value >= payAmount, "Incorrect ETH amount");
+			uint256 excess = msg.value - payAmount;
+			(bool ok, ) = to.call{value: payAmount}("");
 			require(ok, "ETH transfer failed");
+			if (excess > 0) {
+				(bool ok2, ) = msg.sender.call{value: excess}("");
+				require(ok2, "Refund failed");
+			}
 		} else {
 			require(msg.value == 0, "ETH not required");
-			IERC20(settlementToken).safeTransferFrom(msg.sender, to, amount);
+			IERC20(settlementToken).safeTransferFrom(msg.sender, to, payAmount);
 		}
 
 		// ajustar balances: from sube (menos negativo), to baja (menos positivo)
-		netBalance[groupId][msg.sender] += int256(amount);
-		netBalance[groupId][to] -= int256(amount);
-		emit DebtSettled(groupId, msg.sender, to, amount, settlementToken);
+		netBalance[groupId][msg.sender] += int256(payAmount);
+		netBalance[groupId][to] -= int256(payAmount);
+		emit DebtSettled(groupId, msg.sender, to, payAmount, settlementToken);
 	}
 
 	function getMembers(uint256 groupId) external view returns (address[] memory) {

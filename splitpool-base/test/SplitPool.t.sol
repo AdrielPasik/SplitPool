@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "forge-std/Test.sol";
+import "lib/forge-std/src/Test.sol";
 import "src/SplitPool.sol";
 import "src/SplitPoolFactory.sol";
 import "test/mocks/MockERC20.sol";
@@ -26,12 +26,17 @@ contract SplitPoolTest is Test {
         token.mint(bob, mintAmt);
         token.mint(carol, mintAmt);
         token.mint(dave, mintAmt);
+        // Provide ETH balance for participants for payable tests
+        vm.deal(alice, 10 ether);
+        vm.deal(bob, 10 ether);
+        vm.deal(carol, 10 ether);
+        vm.deal(dave, 10 ether);
     }
 
     function _createPool(address settlementToken, uint256 total) internal returns (SplitPool) {
         address[] memory participants = new address[](4);
         participants[0]=alice;participants[1]=bob;participants[2]=carol;participants[3]=dave;
-        address poolAddr = factory.createPool(address(0), merchant, settlementToken, total, 0, participants);
+        address payable poolAddr = payable(factory.createPool(address(0), merchant, settlementToken, total, 0, participants));
         return SplitPool(poolAddr);
     }
 
@@ -57,14 +62,14 @@ contract SplitPoolTest is Test {
 
     function test_Revert_OverpayETH() public {
         uint256 total = 4 ether; SplitPool p = _createPool(address(0), total);
-        vm.expectRevert(); // IncorrectShareAmount custom error
+        vm.expectRevert(abi.encodeWithSelector(ISplitPool.IncorrectShareAmount.selector, 2 ether, 1 ether));
         vm.prank(alice); p.payShare{value:2 ether}();
     }
 
     function test_Revert_DoublePay() public {
         uint256 total = 4 ether; SplitPool p = _createPool(address(0), total);
         vm.prank(alice); p.payShare{value:1 ether}();
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(ISplitPool.AlreadyPaid.selector, alice));
         vm.prank(alice); p.payShare{value:1 ether}();
     }
 
@@ -72,7 +77,7 @@ contract SplitPoolTest is Test {
         uint256 total = 4 ether; SplitPool p = _createPool(address(0), total);
         address outsider = address(0x999);
         vm.deal(outsider, 1 ether);
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(ISplitPool.NotParticipant.selector, outsider));
         vm.prank(outsider); p.payShare{value:1 ether}();
     }
 
@@ -96,7 +101,7 @@ contract SplitPoolTest is Test {
 
     function test_Revert_DepositWrongAmount() public {
         uint256 total = 4 ether; SplitPool p = _createPool(address(0), total);
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(ISplitPool.IncorrectShareAmount.selector, 2 ether, 1 ether));
         vm.prank(alice); p.deposit{value:2 ether}(2 ether);
     }
 }

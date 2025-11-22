@@ -54,9 +54,11 @@ contract SplitGroupTest is Test {
         members[0]=alice; members[1]=bob; members[2]=carol;
         uint256 groupId = sg.createGroup(members, keccak256("meta"));
         vm.prank(alice); sg.addExpense(groupId, 9 ether, keccak256("exp"));
-        // bob intenta pagar más de lo que debe -> se clampa
+        // bob intenta pagar más de lo que debe (5) -> se clampa y se reembolsa exceso
+        uint256 bobBalBefore = bob.balance;
         vm.prank(bob);
-        sg.settleDebt{value:5 ether}(groupId, alice, 5 ether, address(0)); // owning is 3 ether
+        sg.settleDebt{value:5 ether}(groupId, alice, 5 ether, address(0)); // owing is 3 ether
+        assertEq(bob.balance, bobBalBefore - 3 ether, "Solo debe salir lo que realmente debe");
         assertEq(sg.netBalance(groupId, bob), int256(0));
         assertEq(sg.netBalance(groupId, alice), int256(3 ether)); // carol still owes 3
     }
