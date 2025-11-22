@@ -34,7 +34,7 @@ contract SplitPool is ISplitPool, ReentrancyGuard {
         require(_merchant != address(0), "Invalid merchant");
         require(_totalAmount > 0, "Invalid total amount");
         require(participants.length > 0, "No participants");
-        require(_settlementToken == address(0) || _settlementToken != address(0), "token sentinel check"); // placeholder for future validation
+        // allow ETH (address(0)) or ERC20 token
 
         // calculate share per user and validate exact divisibility
         if (_totalAmount % participants.length != 0) {
@@ -131,6 +131,7 @@ contract SplitPool is ISplitPool, ReentrancyGuard {
         emit PoolPaid(address(this), settlementToken, toTransfer, merchant);
     }
 
+    // fallbacks to accept ETH only if pool expects ETH deposits
     // fallbacks to accept ETH only if pool expects ETH deposits
     receive() external payable {
         // block direct ETH transfers

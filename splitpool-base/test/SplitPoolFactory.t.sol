@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
 import "src/SplitPoolFactory.sol";
+import "test/mocks/MockERC20.sol";
 import "src/SplitPool.sol";
 import "src/interfaces/ISplitPoolFactory.sol"; // brings PoolCreated event into scope
 
@@ -19,10 +20,13 @@ contract SplitPoolFactoryTest is Test {
         uint256 participantsLength
     );
     SplitPoolFactory factory;
+    MockERC20 usdt;
     address merchant = address(0xABCD);
     address a = address(0xA1); address b = address(0xB2); address c = address(0xC3); address d = address(0xD4);
 
-    function setUp() public { factory = new SplitPoolFactory(); }
+    function setUp() public {
+        factory = new SplitPoolFactory();
+    }
 
     function test_CreatePoolEmitsEvent() public {
         address[] memory participants = new address[](4);

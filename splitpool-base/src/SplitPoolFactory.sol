@@ -7,6 +7,8 @@ import "./SplitPool.sol";
 contract SplitPoolFactory is ISplitPoolFactory {
     address[] internal _allPools;
     mapping(address => address[]) internal poolsByGroup;
+    
+    constructor() {}
 
     function allPoolsLength() external view override returns (uint256) {
         return _allPools.length;
@@ -27,6 +29,7 @@ contract SplitPoolFactory is ISplitPoolFactory {
         if (merchant == address(0)) revert InvalidMerchant(merchant);
         if (totalAmount == 0) revert InvalidTotalAmount();
         if (participants.length == 0) revert InvalidTotalAmount(); // reuse error; could define InvalidParticipants
+        // no factory-level enforcement; accept ETH (address(0)) or any ERC20 for now
 
         // Optional: validate settlementToken here (only allow USDC or ETH)
         // We'll accept any token for now. Factory-level validation can be added later.

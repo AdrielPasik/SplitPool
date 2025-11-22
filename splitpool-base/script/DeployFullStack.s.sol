@@ -8,20 +8,11 @@ import "src/SplitGroup.sol";
 import "src/PoolAnalytics.sol";
 
 /// @notice Deploys the full SplitPool stack and creates an example pool.
-/// @dev Env vars required:
-/// PRIVATE_KEY          -> uint (without 0x) or hex (forge handles)
-/// PARTICIPANTS_CSV     -> comma separated addresses (0x...)
-/// POOL_TOTAL_WEI       -> total pool amount in wei (must divide participants length)
-/// MERCHANT_ADDR        -> merchant address
-/// OPTIONAL: EXISTING_STORAGE_POINTER (0x address) to reuse already deployed StoragePointer
-/// OPTIONAL: METADATA_CID -> if set, will store the CID under an auto id and use its keccak as metadataPointer
-/// Example run (PowerShell):
-/// $env:PRIVATE_KEY="<hex_key>"; $env:PARTICIPANTS_CSV="0xabc...,0xdef..."; $env:POOL_TOTAL_WEI="3000000000000000000"; \
-/// $env:MERCHANT_ADDR="0xmerchant..."; forge script script/DeployFullStack.s.sol --rpc-url $env:BASE_RPC --broadcast
 contract DeployFullStackScript is Script {
     struct DeployResult {
         address storagePointer;
         address splitGroup;
+        uint256 groupId;
         address analytics;
         address factory;
         address pool;
@@ -32,22 +23,42 @@ contract DeployFullStackScript is Script {
         uint256 deployerPk = uint256(vm.envBytes32("PRIVATE_KEY"));
         vm.startBroadcast(deployerPk);
 
-        address spExisting = _envOptionalAddress("EXISTING_STORAGE_POINTER");
-        StoragePointer sp = spExisting == address(0) ? new StoragePointer() : StoragePointer(spExisting);
+        (address spAddr, address groupAddr, uint256 groupId, address analyticsAddr, address factoryAddr, address poolAddr, uint256 sharePerUser) = _deployAll(deployerPk);
 
-        SplitGroup group = new SplitGroup();
-        // CRE address para analytics: usar deployer por defecto o variable opcional ANALYTICS_CRE
-        address analyticsCre = _envOptionalAddress("ANALYTICS_CRE");
-        if (analyticsCre == address(0)) analyticsCre = vm.addr(deployerPk); // deployer
-        PoolAnalytics analytics = new PoolAnalytics(analyticsCre);
-        SplitPoolFactory factory = new SplitPoolFactory();
+        // Minimal logging
+        console2.log("StoragePointer", spAddr);
+        console2.log("SplitGroup", groupAddr);
+        console2.log("GroupId", groupId);
+        console2.log("PoolAnalytics", analyticsAddr);
+        console2.log("SplitPoolFactory", factoryAddr);
+        console2.log("Pool", poolAddr);
 
-        // Metadata pointer (keccak of stored cid) if provided
+        vm.stopBroadcast();
+
+        r = DeployResult(spAddr, groupAddr, groupId, analyticsAddr, factoryAddr, poolAddr, sharePerUser);
+    }
+
+    function _deployAll(uint256 deployerPk) internal returns (
+        address spAddr,
+        address groupAddr,
+        uint256 groupId,
+        address analyticsAddr,
+        address factoryAddr,
+        address poolAddr,
+        uint256 sharePerUser
+    ) {
+        (address spAddrLocal, address groupAddrLocal, address analyticsAddrLocal, address factoryAddrLocal) = _setupInfra(deployerPk);
+        spAddr = spAddrLocal;
+        groupAddr = groupAddrLocal;
+        analyticsAddr = analyticsAddrLocal;
+        factoryAddr = factoryAddrLocal;
+
+        // pool metadata
         uint256 metadataPointer = 0;
         string memory cid = _envOptionalString("METADATA_CID");
         if (bytes(cid).length > 0) {
             bytes32 id = keccak256(abi.encodePacked("POOL:", cid));
-            sp.setCid(id, cid);
+            StoragePointer(spAddr).setCid(id, cid);
             metadataPointer = uint256(id);
         }
 
@@ -57,35 +68,33 @@ contract DeployFullStackScript is Script {
         require(participants.length > 0, "No participants");
         require(totalAmount % participants.length == 0, "Non divisible total");
 
-        address pool = factory.createPool(
-            address(group),
-            merchant,
-            address(0), // ETH settlement
-            totalAmount,
-            metadataPointer,
-            participants
-        );
+        // group metadata
+        uint256 groupMetaPointer = 0;
+        string memory groupCid = _envOptionalString("GROUP_METADATA_CID");
+        if (bytes(groupCid).length > 0) {
+            bytes32 gidHash = keccak256(abi.encodePacked("GROUP:", groupCid));
+            StoragePointer(spAddr).setCid(gidHash, groupCid);
+            groupMetaPointer = uint256(gidHash);
+        }
 
-        uint256 sharePerUser = totalAmount / participants.length;
+        uint256 appliedGroupMeta = groupMetaPointer != 0 ? groupMetaPointer : (metadataPointer != 0 ? metadataPointer : uint256(keccak256(abi.encodePacked("GROUP:FALLBACK", groupAddr, block.number))));
+        groupId = _createGroupAndReturnId(groupAddr, participants, appliedGroupMeta);
 
-        console2.log("StoragePointer", address(sp));
-        console2.log("SplitGroup", address(group));
-        console2.log("PoolAnalytics", address(analytics));
-        console2.log("Analytics CRE", analyticsCre);
-        console2.log("SplitPoolFactory", address(factory));
-        console2.log("Pool", pool);
-        console2.log("Participants", participants.length);
-        console2.log("SharePerUser", sharePerUser);
-        if (metadataPointer != 0) console2.log("MetadataPointer", metadataPointer);
-
-        vm.stopBroadcast();
-
-        r = DeployResult(address(sp), address(group), address(analytics), address(factory), pool, sharePerUser);
+        poolAddr = _createPoolAndReturn(factoryAddr, groupAddr, merchant, totalAmount, metadataPointer, participants);
+        sharePerUser = totalAmount / participants.length;
     }
 
-    // ------- helpers -------
+    function _createGroupAndReturnId(address groupAddr, address[] memory participants, uint256 appliedGroupMeta) internal returns (uint256) {
+        return SplitGroup(groupAddr).createGroup(participants, appliedGroupMeta);
+    }
+
+    function _createPoolAndReturn(address factoryAddr, address groupAddr, address merchant, uint256 totalAmount, uint256 metadataPointer, address[] memory participants) internal returns (address) {
+        return SplitPoolFactory(factoryAddr).createPool(groupAddr, merchant, address(0), totalAmount, metadataPointer, participants);
+    }
+
     function _parseParticipantsCSV(string memory csv) internal pure returns (address[] memory addrs) {
         bytes memory b = bytes(csv);
+        if (b.length == 0) return new address[](0);
         uint256 count = 1;
         for (uint256 i = 0; i < b.length; i++) {
             if (b[i] == ",") count++;
@@ -97,7 +106,6 @@ contract DeployFullStackScript is Script {
             if (i == b.length || b[i] == ",") {
                 uint256 len = i - start;
                 require(len >= 42, "Addr too short");
-                // extract substring
                 bytes memory sub = new bytes(len);
                 for (uint256 j = 0; j < len; j++) sub[j] = b[start + j];
                 addrs[idx++] = _parseAddress(string(sub));
@@ -125,7 +133,7 @@ contract DeployFullStackScript is Script {
 
     function _envOptionalAddress(string memory key) internal returns (address) {
         (bool ok, bytes memory data) = address(vm).call(abi.encodeWithSignature("envString(string)", key));
-        if (!ok) return address(0); // not set
+        if (!ok) return address(0);
         string memory val = abi.decode(data, (string));
         if (bytes(val).length == 0) return address(0);
         return _parseAddress(val);
@@ -135,5 +143,22 @@ contract DeployFullStackScript is Script {
         (bool ok, bytes memory data) = address(vm).call(abi.encodeWithSignature("envString(string)", key));
         if (!ok) return "";
         return abi.decode(data, (string));
+    }
+
+    function _setupInfra(uint256 deployerPk) internal returns (address spAddr, address groupAddr, address analyticsAddr, address factoryAddr) {
+        address spExisting = _envOptionalAddress("EXISTING_STORAGE_POINTER");
+        StoragePointer sp = spExisting == address(0) ? new StoragePointer() : StoragePointer(spExisting);
+        spAddr = address(sp);
+
+        SplitGroup group = new SplitGroup();
+        groupAddr = address(group);
+
+        address analyticsCre = _envOptionalAddress("ANALYTICS_CRE");
+        if (analyticsCre == address(0)) analyticsCre = vm.addr(deployerPk);
+        PoolAnalytics analytics = new PoolAnalytics(analyticsCre);
+        analyticsAddr = address(analytics);
+
+        SplitPoolFactory factory = new SplitPoolFactory();
+        factoryAddr = address(factory);
     }
 }
