@@ -1,0 +1,29 @@
+{
+  "network": "base-sepolia",
+  "deployer": "0xb7803f1efcb613b6A6bE4FE2fB4dBf860712e28C",
+  "StoragePointer": {
+    "address": "0x705ffbD4E52f0516a713d8fadF6E52DC7De6228d",
+    "transactionHash": "0x4d3288894ce15ea46b02a17ac605aeee91f8d9b5392e8e9797098b5b8dff9800"
+  },
+  "SplitGroup": {
+    "address": "0xa465899391d17473A49B8db1e95b8f31697687c1",
+    "transactionHash": "0x65b0aa18874f2b755dfae06e7819da06a3aead826b92ca6029bebe66cc6db769"
+  },
+  "SplitPoolFactory": {
+    "address": "0xb7247D69B42697B5BEF102213F0bd86bA55db699",
+    "transactionHash": "0x20bfc2e4e613e45d1cd8da82d63797dbe68a5df4a5cc9cf5b45827265c3700ff"
+  },
+  "PoolAnalytics": {
+    "address": "0x564b3e843671817BcF1729dEbB953ef8282c1640",
+    "cre": "0xb7803f1efcb613b6A6bE4FE2fB4dBf860712e28C",
+    "transactionHash": "0x0c22101bb0abcd2d07827e8075940533b816a38b4dbab1ccca61258fe1366243"
+  },
+  "LatestPool": {
+    "address": "0xF6553c8cEb1DeAdF5fb8d6657Ec6C9339B186f17",
+    "createTx": "0xc1c48a25aa5bf1341aef59607b26847c4e88bdd745e531e890cdb31a98010b8e",
+    "participantsLength": 2,
+    "sharePerUserWei": "1000000000000000",
+    "settlementToken": "ETH",
+    "metadataPointer": 0
+  }
+}
