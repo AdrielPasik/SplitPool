@@ -60,19 +60,19 @@ interface ISplitPool {
     /// @dev Will be used when integrating logic with SplitGroup / DebtManager
     error OutstandingDebts(address user, uint256 totalDebt);
 
-    /// @notice Error si el total no se puede dividir exactamente entre participantes
+    /// @notice Error if the total cannot be exactly divided among participants
     error NonDivisibleTotal(uint256 total, uint256 participants);
 
-    /// @notice Error si el usuario no es participante
+    /// @notice Error if the user is not a participant
     error NotParticipant(address user);
 
-    /// @notice Error si el usuario ya pagó su parte
+    /// @notice Error if the user has already paid their share
     error AlreadyPaid(address user);
 
-    /// @notice Error si el monto enviado no coincide exactamente con la parte fija
+    /// @notice Error if the sent amount does not exactly match the fixed share
     error IncorrectShareAmount(uint256 sent, uint256 expected);
 
-    /// @notice Error si se envía ETH directo a receive/fallback cuando no corresponde
+    /// @notice Error if ETH is sent directly to receive/fallback when not allowed
     error DirectEthTransferNotAllowed();
 
     // ==========
@@ -96,16 +96,16 @@ interface ISplitPool {
     /// @dev defined as uint256 to integrate later with StoragePointer
     function metadataPointer() external view returns (uint256);
 
-    /// @notice Monto exacto que cada participante debe pagar
+    /// @notice exact share amount per user
     function sharePerUser() external view returns (uint256);
 
-    /// @notice Cantidad total de participantes
+    /// @notice total number of participants
     function participantsLength() external view returns (uint256);
 
-    /// @notice Devuelve participante por índice
+    /// @notice returns participant by index
     function participantAt(uint256 index) external view returns (address);
 
-    /// @notice Indica si un participante ya pagó
+    /// @notice indicates if a participant has already paid
     function hasPaid(address user) external view returns (bool);
 
     // ==============

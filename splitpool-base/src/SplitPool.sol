@@ -36,7 +36,7 @@ contract SplitPool is ISplitPool, ReentrancyGuard {
         require(participants.length > 0, "No participants");
         require(_settlementToken == address(0) || _settlementToken != address(0), "token sentinel check"); // placeholder for future validation
 
-        // calcular share por usuario y validar divisibilidad exacta
+        // calculate share per user and validate exact divisibility
         if (_totalAmount % participants.length != 0) {
             revert NonDivisibleTotal(_totalAmount, participants.length);
         }
@@ -72,7 +72,7 @@ contract SplitPool is ISplitPool, ReentrancyGuard {
 
     /// @notice deposit into the pool (ETH or ERC20)
     function deposit(uint256 amount) external payable override nonReentrant {
-        // compatibilidad: exigimos que amount == sharePerUser y redirigimos a payShare
+        // compatibility: require amount == sharePerUser and redirect to payShare
         if (amount != sharePerUser) revert IncorrectShareAmount(amount, sharePerUser);
         payShare();
     }
@@ -101,7 +101,7 @@ contract SplitPool is ISplitPool, ReentrancyGuard {
         emit ParticipantPaid(address(this), msg.sender, sharePerUser, paidCount, _participants.length - paidCount);
         emit Deposit(address(this), msg.sender, sharePerUser, collectedAmount); // mantener evento legacy
 
-        // liquidar solo cuando todos pagaron y se cumple total exacto
+        // only autoPay when all paid and total exact
         if (paidCount == _participants.length && collectedAmount == totalAmount) {
             _autoPay();
         }
@@ -133,7 +133,7 @@ contract SplitPool is ISplitPool, ReentrancyGuard {
 
     // fallbacks to accept ETH only if pool expects ETH deposits
     receive() external payable {
-        // bloquear envíos directos para evitar sobrepago accidental
+        // block direct ETH transfers
         revert DirectEthTransferNotAllowed();
     }
 
@@ -141,7 +141,7 @@ contract SplitPool is ISplitPool, ReentrancyGuard {
         if (msg.value > 0) revert DirectEthTransferNotAllowed();
     }
 
-    // interno: verificar si address está en participantes (lineal; se puede optimizar con mapping si escala)
+    // internal: check if address is a participant (linear; can be optimized with mapping if scales)
     function _isParticipant(address user) internal view returns (bool) {
         uint256 len = _participants.length;
         for (uint256 i = 0; i < len; ++i) {
