@@ -1,0 +1,6 @@
+[submodule "splitpool-base/lib/forge-std"]
+	path = splitpool-base/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "splitpool-base/lib/openzeppelin-contracts"]
+	path = splitpool-base/lib/openzeppelin-contracts
+	url = https://github.com/openzeppelin/openzeppelin-contracts
