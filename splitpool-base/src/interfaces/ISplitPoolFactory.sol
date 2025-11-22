@@ -19,7 +19,8 @@ interface ISplitPoolFactory {
         address merchant,
         address settlementToken,
         uint256 totalAmount,
-        uint256 metadataPointer
+        uint256 metadataPointer,
+        uint256 participantsLength
     );
 
     /// @notice Error if the token is not one of the accepted ones (example, only USDC/ETH)
@@ -49,7 +50,8 @@ interface ISplitPoolFactory {
         address merchant,
         address settlementToken,
         uint256 totalAmount,
-        uint256 metadataPointer
+        uint256 metadataPointer,
+        address[] calldata participants
     ) external returns (address pool);
 
     /// @notice Returns all pools associated with a group

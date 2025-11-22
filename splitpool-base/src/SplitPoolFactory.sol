@@ -21,10 +21,12 @@ contract SplitPoolFactory is ISplitPoolFactory {
         address merchant,
         address settlementToken,
         uint256 totalAmount,
-        uint256 metadataPointer
+        uint256 metadataPointer,
+        address[] calldata participants
     ) external override returns (address pool) {
         if (merchant == address(0)) revert InvalidMerchant(merchant);
         if (totalAmount == 0) revert InvalidTotalAmount();
+        if (participants.length == 0) revert InvalidTotalAmount(); // reuse error; could define InvalidParticipants
 
         // Optional: validate settlementToken here (only allow USDC or ETH)
         // We'll accept any token for now. Factory-level validation can be added later.
@@ -35,7 +37,8 @@ contract SplitPoolFactory is ISplitPoolFactory {
             merchant,
             settlementToken,
             totalAmount,
-            metadataPointer
+            metadataPointer,
+            participants
         );
 
         pool = address(s);
@@ -45,7 +48,7 @@ contract SplitPoolFactory is ISplitPoolFactory {
             poolsByGroup[group].push(pool);
         }
 
-        emit PoolCreated(pool, msg.sender, group, merchant, settlementToken, totalAmount, metadataPointer);
+        emit PoolCreated(pool, msg.sender, group, merchant, settlementToken, totalAmount, metadataPointer, participants.length);
     }
 
     function getPoolsByGroup(address group) external view override returns (address[] memory) {

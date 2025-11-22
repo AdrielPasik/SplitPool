@@ -28,6 +28,15 @@ interface ISplitPool {
         address indexed merchant
     );
 
+    /// @notice Emitted cuando un participante paga su parte fija
+    event ParticipantPaid(
+        address indexed pool,
+        address indexed payer,
+        uint256 amount,
+        uint256 paidCount,
+        uint256 remainingParticipants
+    );
+
     /// @notice Emitted when a user is refunded from a cancelled pool
     event Refunded(
         address indexed pool,
@@ -51,6 +60,21 @@ interface ISplitPool {
     /// @dev Will be used when integrating logic with SplitGroup / DebtManager
     error OutstandingDebts(address user, uint256 totalDebt);
 
+    /// @notice Error si el total no se puede dividir exactamente entre participantes
+    error NonDivisibleTotal(uint256 total, uint256 participants);
+
+    /// @notice Error si el usuario no es participante
+    error NotParticipant(address user);
+
+    /// @notice Error si el usuario ya pagó su parte
+    error AlreadyPaid(address user);
+
+    /// @notice Error si el monto enviado no coincide exactamente con la parte fija
+    error IncorrectShareAmount(uint256 sent, uint256 expected);
+
+    /// @notice Error si se envía ETH directo a receive/fallback cuando no corresponde
+    error DirectEthTransferNotAllowed();
+
     // ==========
     //  Getters
     // ==========
@@ -72,6 +96,18 @@ interface ISplitPool {
     /// @dev defined as uint256 to integrate later with StoragePointer
     function metadataPointer() external view returns (uint256);
 
+    /// @notice Monto exacto que cada participante debe pagar
+    function sharePerUser() external view returns (uint256);
+
+    /// @notice Cantidad total de participantes
+    function participantsLength() external view returns (uint256);
+
+    /// @notice Devuelve participante por índice
+    function participantAt(uint256 index) external view returns (address);
+
+    /// @notice Indica si un participante ya pagó
+    function hasPaid(address user) external view returns (bool);
+
     // ==============
     //  Core actions
     // ==============
@@ -86,6 +122,11 @@ interface ISplitPool {
     ///      - update collectedAmount
     ///      - if totalAmount is reached => autoPay()
     function deposit(uint256 amount) external payable;
+
+    /// @notice Pagar la parte fija asignada al msg.sender
+    /// @dev Para tokens ERC20: se requiere allowance previo igual a sharePerUser
+    ///      Para ETH: se debe enviar exactamente msg.value == sharePerUser
+    function payShare() external payable;
 
     /// @notice Manually pay the merchant (in case we want to expose it)
     /// @dev In the implementation it will be internal + public wrapper, but

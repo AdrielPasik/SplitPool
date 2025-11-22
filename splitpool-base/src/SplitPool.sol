@@ -15,6 +15,11 @@ contract SplitPool is ISplitPool, ReentrancyGuard {
     uint256 public override collectedAmount;
     PoolStatus public override status;
     uint256 public override metadataPointer;
+    uint256 public override sharePerUser;
+
+    address[] private _participants;
+    mapping(address => bool) private _hasPaid;
+    uint256 public paidCount;
     address public factory;    // who deployed it
     address public creator;    // who initiated the pool (from factory)
 
@@ -23,10 +28,20 @@ contract SplitPool is ISplitPool, ReentrancyGuard {
         address _merchant,
         address _settlementToken,
         uint256 _totalAmount,
-        uint256 _metadataPointer
+        uint256 _metadataPointer,
+        address[] memory participants
     ) {
         require(_merchant != address(0), "Invalid merchant");
         require(_totalAmount > 0, "Invalid total amount");
+        require(participants.length > 0, "No participants");
+        require(_settlementToken == address(0) || _settlementToken != address(0), "token sentinel check"); // placeholder for future validation
+
+        // calcular share por usuario y validar divisibilidad exacta
+        if (_totalAmount % participants.length != 0) {
+            revert NonDivisibleTotal(_totalAmount, participants.length);
+        }
+        sharePerUser = _totalAmount / participants.length;
+        _participants = participants;
 
         creator = _creator;
         factory = msg.sender; // factory will deploy -> msg.sender = factory
@@ -43,29 +58,51 @@ contract SplitPool is ISplitPool, ReentrancyGuard {
         return totalAmount - collectedAmount;
     }
 
+    function participantsLength() external view override returns (uint256) {
+        return _participants.length;
+    }
+
+    function participantAt(uint256 index) external view override returns (address) {
+        return _participants[index];
+    }
+
+    function hasPaid(address user) external view override returns (bool) {
+        return _hasPaid[user];
+    }
+
     /// @notice deposit into the pool (ETH or ERC20)
     function deposit(uint256 amount) external payable override nonReentrant {
-        if (status != PoolStatus.Open) {
-            revert PoolAlreadyPaid();
-        }
+        // compatibilidad: exigimos que amount == sharePerUser y redirigimos a payShare
+        if (amount != sharePerUser) revert IncorrectShareAmount(amount, sharePerUser);
+        payShare();
+    }
+
+    function payShare() public payable override nonReentrant {
+        if (status != PoolStatus.Open) revert PoolAlreadyPaid();
+        if (_hasPaid[msg.sender]) revert AlreadyPaid(msg.sender);
+        // verificar que sea participante
+        if (!_isParticipant(msg.sender)) revert NotParticipant(msg.sender);
 
         if (settlementToken == address(0)) {
-            // ETH flow
-            if (msg.value != amount) revert InvalidSettlementToken(address(0));
+            // ETH: debe enviar exactamente sharePerUser
+            if (msg.value != sharePerUser) revert IncorrectShareAmount(msg.value, sharePerUser);
             collectedAmount += msg.value;
         } else {
-            // ERC20 flow
-            if (msg.value != 0) revert InvalidSettlementToken(address(0));
+            // ERC20: msg.value debe ser 0 y transferimos sharePerUser
+            if (msg.value != 0) revert IncorrectShareAmount(msg.value, 0);
             IERC20 token = IERC20(settlementToken);
-            // transferFrom payer -> this
-            token.safeTransferFrom(msg.sender, address(this), amount);
-            collectedAmount += amount;
+            token.safeTransferFrom(msg.sender, address(this), sharePerUser);
+            collectedAmount += sharePerUser;
         }
 
-        emit Deposit(address(this), msg.sender, amount, collectedAmount);
+        _hasPaid[msg.sender] = true;
+        paidCount += 1;
 
-        // if fullfilled or overfunded, pay merchant
-        if (collectedAmount >= totalAmount) {
+        emit ParticipantPaid(address(this), msg.sender, sharePerUser, paidCount, _participants.length - paidCount);
+        emit Deposit(address(this), msg.sender, sharePerUser, collectedAmount); // mantener evento legacy
+
+        // liquidar solo cuando todos pagaron y se cumple total exacto
+        if (paidCount == _participants.length && collectedAmount == totalAmount) {
             _autoPay();
         }
     }
@@ -96,22 +133,20 @@ contract SplitPool is ISplitPool, ReentrancyGuard {
 
     // fallbacks to accept ETH only if pool expects ETH deposits
     receive() external payable {
-        require(settlementToken == address(0), "Pool not accepting ETH");
-        // route to deposit logic: we can't know amount parameter here, so increase collectedAmount
-        collectedAmount += msg.value;
-        emit Deposit(address(this), msg.sender, msg.value, collectedAmount);
-        if (collectedAmount >= totalAmount) {
-            _autoPay();
-        }
+        // bloquear envíos directos para evitar sobrepago accidental
+        revert DirectEthTransferNotAllowed();
     }
 
     fallback() external payable {
-        if (msg.value == 0) return; // nothing to do if no ETH sent
-        require(settlementToken == address(0), "Pool not accepting ETH");
-        collectedAmount += msg.value;
-        emit Deposit(address(this), msg.sender, msg.value, collectedAmount);
-        if (collectedAmount >= totalAmount) {
-            _autoPay();
+        if (msg.value > 0) revert DirectEthTransferNotAllowed();
+    }
+
+    // interno: verificar si address está en participantes (lineal; se puede optimizar con mapping si escala)
+    function _isParticipant(address user) internal view returns (bool) {
+        uint256 len = _participants.length;
+        for (uint256 i = 0; i < len; ++i) {
+            if (_participants[i] == user) return true;
         }
+        return false;
     }
 }
