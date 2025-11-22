@@ -1,29 +1,68 @@
 {
   "network": "base-sepolia",
+  "chainId": 84532,
   "deployer": "0xb7803f1efcb613b6A6bE4FE2fB4dBf860712e28C",
+  "run": {
+    "timestamp": "2025-11-22T00:00:00Z",
+    "script": "script/DeployFullStack.s.sol:DeployFullStackScript",
+    "estimatedGasPriceGwei": "0.001444536",
+    "avgPaidGasPriceGwei": "0.001220395",
+    "totalGasUsed": 3368720,
+    "totalEthPaid": "0.0000041111690444"
+  },
   "StoragePointer": {
     "address": "0x705ffbD4E52f0516a713d8fadF6E52DC7De6228d",
+    "existing": true,
+    "note": "Reused storage pointer; original deployment tx retained",
     "transactionHash": "0x4d3288894ce15ea46b02a17ac605aeee91f8d9b5392e8e9797098b5b8dff9800"
   },
   "SplitGroup": {
-    "address": "0xa465899391d17473A49B8db1e95b8f31697687c1",
-    "transactionHash": "0x65b0aa18874f2b755dfae06e7819da06a3aead826b92ca6029bebe66cc6db769"
-  },
-  "SplitPoolFactory": {
-    "address": "0xb7247D69B42697B5BEF102213F0bd86bA55db699",
-    "transactionHash": "0x20bfc2e4e613e45d1cd8da82d63797dbe68a5df4a5cc9cf5b45827265c3700ff"
+    "address": "0xd12931077e207E651edCe507Fe41A878E449e8e1",
+    "transactionHash": "0xe2a35f5b92496ce6895f891f99eb27ff89a911737bd1d9081552c76deed74aa2",
+    "block": 34037716,
+    "gasUsed": 1066055,
+    "ethPaid": "0.000001301008191725",
+    "groupId": 1,
+    "groupMetadataPointer": "24471806708775696352197932686111472414141060135502490047153170750644998881614"
   },
   "PoolAnalytics": {
-    "address": "0x564b3e843671817BcF1729dEbB953ef8282c1640",
+    "address": "0xC1642383b16c960864D72BC8FE79d6408EF12509",
     "cre": "0xb7803f1efcb613b6A6bE4FE2fB4dBf860712e28C",
-    "transactionHash": "0x0c22101bb0abcd2d07827e8075940533b816a38b4dbab1ccca61258fe1366243"
+    "transactionHash": "0x8fc3d241ab156814bebca90f26ac1bc6b62374b242f82198a10cb54556ba0136",
+    "block": 34037716,
+    "gasUsed": 301376,
+    "ethPaid": "0.00000036779776352"
+  },
+  "SplitPoolFactory": {
+    "address": "0x38D56a141fb700d99D661bE7c1E80e73490252a5",
+    "transactionHash": "0xa99b96e37aafa1fc98f5d4f60bf8ba37761603bd8171cddaa21e7d299ab9b7a2",
+    "block": 34037716,
+    "gasUsed": 1011902,
+    "ethPaid": "0.00000123492014129"
   },
   "LatestPool": {
-    "address": "0xF6553c8cEb1DeAdF5fb8d6657Ec6C9339B186f17",
-    "createTx": "0xc1c48a25aa5bf1341aef59607b26847c4e88bdd745e531e890cdb31a98010b8e",
+    "address": "0xCbF1D93BbAFc913262516C15E511a3191ccE7b6E",
+    "createTx": "0x7fda51a87ed6c516d5341ef976f42596cc7d153473eea486781b433acca021dc",
+    "participants": [
+      "0x4668F3EFcd94f8f13fbC31dECbE7D33af228012A",
+      "0xb7803f1efcb613b6A6bE4FE2fB4dBf860712e28C"
+    ],
     "participantsLength": 2,
     "sharePerUserWei": "1000000000000000",
+    "totalAmountWei": "2000000000000000",
     "settlementToken": "ETH",
-    "metadataPointer": 0
-  }
+    "metadataPointer": 0,
+    "block": 34037716,
+    "gasUsed": 807087,
+    "ethPaid": "0.000000984964939365"
+  },
+  "additionalTransactions": [
+    {
+      "hash": "0xbae22f9be23e44a612ff199e360a843d400f5f63aa47866c51f2838a2c3bba3b",
+      "block": 34037716,
+      "gasUsed": 182300,
+      "ethPaid": "0.0000002224780085",
+      "description": "Secondary function call during deployment (likely group or pool creation step)"
+    }
+  ]
 }
