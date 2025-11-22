@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } 
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useUserPools } from '../../hooks/usePools';
+import type { Pool, PartialPool } from '../../types/models';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { formatAddress, formatCurrency, formatPercentage } from '../../lib/utils/format';
@@ -18,8 +19,9 @@ export default function PoolsScreen() {
     setRefreshing(false);
   };
 
-  const activePools = pools?.filter((p: Pool | undefined) => p?.status === 'Open') ?? [];
-  const completedPools = pools?.filter((p: Pool | undefined) => p?.status === 'Paid') ?? [];
+  const normalized: PartialPool[] = (pools ?? []).map(p => p as PartialPool);
+  const activePools = normalized.filter(p => p && p.status === 'Open');
+  const completedPools = normalized.filter(p => p && p.status === 'Paid');
 
   return (
     <View style={styles.container}>
@@ -43,7 +45,7 @@ export default function PoolsScreen() {
         {activePools.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Active ({activePools.length})</Text>
-            {activePools.map((pool: Pool, i: number) => (
+            {activePools.map((pool: PartialPool, i: number) => (
               <PoolCard
                 key={i}
                 pool={pool}
@@ -56,7 +58,7 @@ export default function PoolsScreen() {
         {completedPools.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Completed ({completedPools.length})</Text>
-            {completedPools.map((pool: Pool, i: number) => (
+            {completedPools.map((pool: PartialPool, i: number) => (
               <PoolCard
                 key={i}
                 pool={pool}
@@ -85,7 +87,7 @@ export default function PoolsScreen() {
   );
 }
 
-function PoolCard({ pool, onPress }: { pool: Pool; onPress: () => void }) {
+function PoolCard({ pool, onPress }: { pool: PartialPool; onPress: () => void }) {
   const progress = Number(pool.collectedAmount) / Number(pool.totalAmount);
   const progressPercent = Math.round(progress * 100);
 

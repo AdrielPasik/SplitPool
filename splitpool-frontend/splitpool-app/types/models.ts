@@ -40,11 +40,16 @@ export interface Pool {
   metadataPointer: number;
   sharePerUser: bigint;
   participants: Address[];
+  paidCount?: number; // number of participants who paid
+  hasPaid?: boolean; // whether current connected user paid
   metadata?: {
     merchantName: string;
     description?: string;
   };
 }
+
+// Relaxed partial version used when data comes from API without full fields
+export type PartialPool = Partial<Pool> & Pick<Pool, 'address' | 'status' | 'participants' | 'sharePerUser' | 'merchant' | 'totalAmount' | 'collectedAmount'>;
 
 export type PoolStatus = 'collecting' | 'paid' | 'closed';
 export type ExpenseStatus = 'pending' | 'approved';

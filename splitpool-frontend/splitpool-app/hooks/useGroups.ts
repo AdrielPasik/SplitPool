@@ -27,14 +27,16 @@ export function useUserGroups() {
       const userGroupIds: bigint[] = [];
       
       for (let i = 1n; i <= groupCount; i++) {
-        const members = await publicClient.readContract({
+        // Ensure TypeScript treats this as Address[] instead of never[]
+        const members: Address[] = await publicClient.readContract({
           address: SPLIT_GROUP_ADDRESS,
           abi: SPLITGROUP_ABI,
           functionName: 'getMembers',
           args: [i],
-        });
+        }) as Address[];
 
-        if (members.some(m => m.toLowerCase() === address.toLowerCase())) {
+        const userAddr = address as Address; // ensure proper typing
+        if (members.some((m: Address) => m.toLowerCase() === userAddr.toLowerCase())) {
           userGroupIds.push(i);
         }
       }

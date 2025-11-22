@@ -31,7 +31,7 @@ export async function fetchFromFilecoin<T = any>(
     gateway = IPFS_GATEWAYS[0],
   } = options;
 
-  const url = ${gateway}/${cid};
+  const url = `${gateway}/${cid}`;
 
   try {
     const controller = new AbortController();
@@ -44,13 +44,13 @@ export async function fetchFromFilecoin<T = any>(
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      throw new Error(HTTP ${response.status}: ${response.statusText});
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
     const data = await response.json();
     return data as T;
   } catch (error) {
-    console.error(Failed to fetch from ${url}:, error);
+    console.error(`Failed to fetch from ${url}:`, error);
 
     // Retry con siguiente gateway
     if (retries > 0) {
@@ -129,7 +129,7 @@ export function resolveIPFSUrl(
 ): string {
   if (ipfsUrl.startsWith('ipfs://')) {
     const cid = ipfsUrl.replace('ipfs://', '');
-    return ${gateway}/${cid};
+    return `${gateway}/${cid}`;
   }
   return ipfsUrl;
 }

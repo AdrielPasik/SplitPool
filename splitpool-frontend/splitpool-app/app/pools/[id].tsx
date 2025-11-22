@@ -39,8 +39,11 @@ export default function PoolDetailScreen() {
     );
   }
 
-  const progress = Number(pool.collectedAmount) / Number(pool.totalAmount);
-  const progressPercent = Math.round(progress * 100);
+  // Normalizar valores numéricos (collectedAmount y totalAmount pueden llegar como bigint o string)
+  const collected = typeof pool.collectedAmount === 'bigint' ? Number(pool.collectedAmount) : Number(pool.collectedAmount || 0);
+  const total = typeof pool.totalAmount === 'bigint' ? Number(pool.totalAmount) : Number(pool.totalAmount || 0);
+  const progress = total > 0 ? collected / total : 0;
+  const progressPercent = Math.min(100, Math.round(progress * 100));
 
   return (
     <View style={styles.container}>
@@ -68,7 +71,7 @@ export default function PoolDetailScreen() {
           </Text>
           <View style={styles.progressContainer}>
             <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: ${progressPercent}% }]} />
+              <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
             </View>
             <Text style={styles.progressText}>
               {formatCurrency(pool.collectedAmount)} collected ({progressPercent}%)
@@ -147,7 +150,7 @@ export default function PoolDetailScreen() {
         {!pool.hasPaid && pool.status === 'Open' && (
           <View style={styles.actions}>
             <Button
-              label={Pay ${formatCurrency(pool.sharePerUser)}}
+              label={`Pay ${formatCurrency(pool.sharePerUser)}`}
               variant="primary"
               size="lg"
               fullWidth

@@ -310,7 +310,6 @@ const styles = StyleSheet.create({
     color: COLORS.text.inverse,
     borderRadius: RADIUS.full,
     textAlign: 'center',
-    lineHeight: 24,
     ...TYPOGRAPHY.bodySm,
     fontWeight: '700',
   },

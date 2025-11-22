@@ -54,24 +54,23 @@ export async function uploadToFilecoin(
   }
 
   try {
-    // Crear blob con metadata JSON
+    // Crear blob con metadata JSON (React Native: dependerá de polyfills; dejar TODO)
     const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-    const file = new File([blob], 'metadata.json');
 
-    // Upload a Web3.Storage
     const formData = new FormData();
-    formData.append('file', file as any);
+    // En RN suele usarse { uri, name, type }, pero para JSON puede funcionar blob si está polyfilled
+    formData.append('file', blob as any, 'metadata.json');
 
     const response = await fetch('https://api.web3.storage/upload', {
       method: 'POST',
       headers: {
-        Authorization: Bearer ${apiKey},
+        Authorization: `Bearer ${apiKey}`,
       },
       body: formData,
     });
 
     if (!response.ok) {
-      throw new Error(Upload failed: ${response.statusText});
+      throw new Error(`Upload failed: ${response.statusText}`);
     }
 
     const result = await response.json();
@@ -79,8 +78,8 @@ export async function uploadToFilecoin(
 
     return {
       cid,
-      url: ipfs://${cid},
-      gateway: https://${cid}.ipfs.w3s.link,
+      url: `ipfs://${cid}`,
+      gateway: `https://${cid}.ipfs.w3s.link`,
     };
   } catch (error) {
     console.error('Failed to upload to Filecoin:', error);
@@ -105,21 +104,20 @@ export async function uploadImageToFilecoin(
     // Fetch image como blob
     const response = await fetch(imageUri);
     const blob = await response.blob();
-    const file = new File([blob], filename);
-
+    // Crear form data (en RN: usar blob polyfill o convertir a base64 y enviar)
     const formData = new FormData();
-    formData.append('file', file as any);
+    formData.append('file', blob as any, filename);
 
     const uploadResponse = await fetch('https://api.web3.storage/upload', {
       method: 'POST',
       headers: {
-        Authorization: Bearer ${apiKey},
+        Authorization: `Bearer ${apiKey}`,
       },
       body: formData,
     });
 
     if (!uploadResponse.ok) {
-      throw new Error(Upload failed: ${uploadResponse.statusText});
+      throw new Error(`Upload failed: ${uploadResponse.statusText}`);
     }
 
     const result = await uploadResponse.json();
@@ -127,8 +125,8 @@ export async function uploadImageToFilecoin(
 
     return {
       cid,
-      url: ipfs://${cid},
-      gateway: https://${cid}.ipfs.w3s.link,
+      url: `ipfs://${cid}`,
+      gateway: `https://${cid}.ipfs.w3s.link`,
     };
   } catch (error) {
     console.error('Failed to upload image to Filecoin:', error);
@@ -196,14 +194,14 @@ export async function mockUploadToFilecoin(
   await new Promise((resolve) => setTimeout(resolve, 1000));
   
   // Generar CID mock
-  const mockCid = bafybei${Math.random().toString(36).substring(2, 15)};
+  const mockCid = `bafybei${Math.random().toString(36).substring(2, 15)}`;
   
   console.log('🔶 Mock upload:', data);
   
   return {
     cid: mockCid,
-    url: ipfs://${mockCid},
-    gateway: https://${mockCid}.ipfs.w3s.link,
+    url: `ipfs://${mockCid}`,
+    gateway: `https://${mockCid}.ipfs.w3s.link`,
   };
 }
 

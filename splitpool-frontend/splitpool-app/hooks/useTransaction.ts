@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Address } from 'viem';
 import { publicClient, createWalletClientForProvider } from '../lib/web3/client';
-import { useWeb3ModalProvider } from '@walletconnect/modal-react-native';
+// TODO: Integrate a real wallet provider (Web3Modal RN wagmi/ethers adapter)
+// Removed invalid import `useWeb3ModalProvider` (not exported in current version)
 
 export function useTransaction() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const queryClient = useQueryClient();
-  const { walletProvider } = useWeb3ModalProvider();
+  // Placeholder provider until Web3Modal RN integration is finalized.
+  const walletProvider: any | null = null; // TODO: obtain from context or connection hook
 
   const executeTransaction = async (
     contractAddress: Address,
@@ -18,7 +20,7 @@ export function useTransaction() {
     value?: bigint
   ) => {
     if (!walletProvider) {
-      throw new Error('Wallet not connected');
+      throw new Error('Wallet not connected (provider missing)');
     }
 
     setLoading(true);

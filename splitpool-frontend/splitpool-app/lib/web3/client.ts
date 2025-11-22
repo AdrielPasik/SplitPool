@@ -1,4 +1,4 @@
-import { createPublicClient, createWalletClient, http, custom } from 'viem';
+import { createPublicClient, createWalletClient, http, custom, type Address } from 'viem';
 import { baseSepolia } from './chains';
 import { CONTRACTS, RPC_URL } from '../contracts/contracts';
 
@@ -14,7 +14,8 @@ export function createWalletClientForProvider(provider: any) {
   });
 }
 
-export const SPLIT_GROUP_ADDRESS = CONTRACTS.baseSepolia.splitGroup as 0x${string};
-export const SPLIT_POOL_FACTORY_ADDRESS = CONTRACTS.baseSepolia.splitPoolFactory as 0x${string};
-export const POOL_ANALYTICS_ADDRESS = CONTRACTS.baseSepolia.poolAnalytics as 0x${string};
-export const STORAGE_POINTER_ADDRESS = CONTRACTS.baseSepolia.storagePointer as 0x${string};
+// Address constants typed properly
+export const SPLIT_GROUP_ADDRESS: Address = CONTRACTS.baseSepolia.splitGroup as Address;
+export const SPLIT_POOL_FACTORY_ADDRESS: Address = CONTRACTS.baseSepolia.splitPoolFactory as Address;
+export const POOL_ANALYTICS_ADDRESS: Address = CONTRACTS.baseSepolia.poolAnalytics as Address;
+export const STORAGE_POINTER_ADDRESS: Address = CONTRACTS.baseSepolia.storagePointer as Address;

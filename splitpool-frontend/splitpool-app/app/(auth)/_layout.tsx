@@ -2,33 +2,9 @@ import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createWeb3Modal, defaultConfig, Web3Modal } from '@walletconnect/modal-react-native';
-import { baseSepolia } from '../lib/web3/chains';
+// TODO: Integrate correct Web3Modal RN package (e.g. '@web3modal/wagmi-react-native') after installing.
 
-// Configuración de WalletConnect
-const projectId = process.env.EXPO_PUBLIC_WALLETCONNECT_PROJECT_ID || 'YOUR_PROJECT_ID';
-
-const metadata = {
-  name: 'SplitPool',
-  description: 'Split bills, settle on-chain',
-  url: 'https://splitpool.app',
-  icons: ['https://splitpool.app/icon.png'],
-  redirect: {
-    native: 'splitpool://',
-    universal: 'https://splitpool.app',
-  },
-};
-
-const config = defaultConfig({
-  metadata,
-});
-
-// Crear Web3Modal
-createWeb3Modal({
-  projectId,
-  chains: [baseSepolia],
-  config,
-});
+// Placeholder sin configuración WalletConnect válida mientras se corrige el paquete.
 
 // Crear QueryClient
 const queryClient = new QueryClient({
@@ -110,7 +86,7 @@ export default function RootLayout() {
           }} 
         />
       </Stack>
-      <Web3Modal />
+      {/* TODO: Insert Web3Modal component once proper package integrated */}
     </QueryClientProvider>
   );
 }

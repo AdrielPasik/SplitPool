@@ -152,9 +152,9 @@ export default function CreatePoolScreen() {
           {participants.map((participant, index) => (
             <View key={index} style={styles.participantRow}>
               <Input
-                placeholder={index === 0 ? 'You (creator)' : Participant ${index + 1} (0x...)}
+                placeholder={index === 0 ? 'You (creator)' : `Participant ${index + 1} (0x...)`}
                 value={participant}
-                onChangeText={(value) => handleParticipantChange(index, value)}
+                onChangeText={(value: string) => handleParticipantChange(index, value)}
                 autoCapitalize="none"
                 autoCorrect={false}
                 editable={index !== 0}
