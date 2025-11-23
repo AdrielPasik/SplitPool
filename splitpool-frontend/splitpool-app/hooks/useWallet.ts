@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-// Removed WalletConnect modal hooks (`useWeb3Modal`, `useWeb3ModalAccount`) – not exported in current version.
-// TODO: Integrate a proper wallet solution (e.g. `@web3modal/wagmi-react-native` or wagmi connectors) and replace placeholders below.
+import { useWeb3Modal } from '@web3modal/wagmi-react-native';
+import { useAccount, useDisconnect, useWalletClient } from 'wagmi';
 import { useWalletStore } from '../store/wallet';
 import type { Address } from '../types/models';
 
@@ -12,12 +12,11 @@ export function useWallet(): {
   disconnect: () => Promise<void>;
   walletProvider: any | null;
 } {
-  // Placeholder connection state until real wallet integration.
-  const address: string | null = null;
-  const isConnected = false;
-  // Placeholder until provider hook is available (wagmi/react-native or ethers adapter)
-  const walletProvider: any | null = null; // TODO: set from connection context
-  
+  const { open } = useWeb3Modal();
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
+  const { data: walletClient } = useWalletClient();
+
   const { 
     address: storeAddress, 
     isConnected: storeIsConnected,
@@ -27,7 +26,6 @@ export function useWallet(): {
 
   const [loading, setLoading] = useState(false);
 
-  // Sincronizar con store cuando cambia la conexión
   useEffect(() => {
     if (isConnected && address && address !== storeAddress) {
       storeConnect(address as Address);
@@ -39,29 +37,28 @@ export function useWallet(): {
   const connect = async () => {
     setLoading(true);
     try {
-      // TODO: invoke wallet modal/connect function
-      throw new Error('Wallet connect not implemented');
+      await open();
     } finally {
       setLoading(false);
     }
   };
 
-  const disconnect = async () => {
+  const doDisconnect = async () => {
     setLoading(true);
     try {
+      await disconnect();
       storeDisconnect();
-      // WalletConnect modal maneja el disconnect internamente
     } finally {
       setLoading(false);
     }
   };
 
   return {
-    address: address as Address | null,
+    address: (address ?? null) as Address | null,
     isConnected,
     loading,
     connect,
-    disconnect,
-    walletProvider,
+    disconnect: doDisconnect,
+    walletProvider: walletClient ?? null,
   };
 }

@@ -1,4 +1,6 @@
 // polyfills.ts
+// WalletConnect native compatibility must be imported before other web3 libs
+import '@walletconnect/react-native-compat';
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
 

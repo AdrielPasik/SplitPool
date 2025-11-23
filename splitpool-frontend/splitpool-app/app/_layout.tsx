@@ -4,12 +4,20 @@ import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '../components/shared/ErrorBoundary';
 import { View, ActivityIndicator } from 'react-native';
-// WalletConnect placeholder: adjust to proper Web3Modal RN package
+import { WagmiConfig } from 'wagmi';
+import { baseSepolia } from 'wagmi/chains';
+import { createWeb3Modal, defaultWagmiConfig, Web3Modal } from '@web3modal/wagmi-react-native';
 
-// TODO: Integrate Web3Modal React Native package (e.g. '@web3modal/wagmi-react-native')
-// const projectId = process.env.EXPO_PUBLIC_WALLETCONNECT_PROJECT_ID || 'YOUR_PROJECT_ID';
-// const metadata = { name: 'SplitPool', description: 'Split bills, settle on-chain', url: 'https://splitpool.app', icons: ['https://splitpool.app/icon.png'] };
-// createWeb3Modal({ projectId, wagmiConfig, themeMode: 'dark' });
+const projectId = process.env.EXPO_PUBLIC_WALLETCONNECT_PROJECT_ID || '';
+const metadata = {
+  name: 'SplitPool',
+  description: 'Split bills, settle on-chain',
+  url: 'https://splitpool.app',
+  icons: ['https://splitpool.app/icon.png'],
+};
+const chains = [baseSepolia];
+const wagmiConfig = defaultWagmiConfig({ chains, projectId, metadata });
+createWeb3Modal({ projectId, chains, wagmiConfig });
 
 // Create QueryClient
 const queryClient = new QueryClient({
@@ -29,6 +37,7 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <WagmiConfig config={wagmiConfig}>
       <StatusBar style="auto" />
       <ErrorBoundary>
         <Suspense
@@ -100,6 +109,8 @@ export default function RootLayout() {
       </Stack>
         </Suspense>
       </ErrorBoundary>
+      <Web3Modal />
+      </WagmiConfig>
     </QueryClientProvider>
   );
 }

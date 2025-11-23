@@ -1,16 +1,15 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Address } from 'viem';
-import { publicClient, createWalletClientForProvider } from '../lib/web3/client';
-// TODO: Integrate a real wallet provider (Web3Modal RN wagmi/ethers adapter)
-// Removed invalid import `useWeb3ModalProvider` (not exported in current version)
+import { useWalletClient, usePublicClient } from 'wagmi';
+import type { Address } from 'viem';
 
 export function useTransaction() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const queryClient = useQueryClient();
-  // Placeholder provider until Web3Modal RN integration is finalized.
-  const walletProvider: any | null = null; // TODO: obtain from context or connection hook
+
+  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
 
   const executeTransaction = async (
     contractAddress: Address,
@@ -19,18 +18,20 @@ export function useTransaction() {
     args: any[],
     value?: bigint
   ) => {
-    if (!walletProvider) {
-      throw new Error('Wallet not connected (provider missing)');
+    if (!walletClient) {
+      throw new Error('Wallet not connected');
     }
 
     setLoading(true);
     setError(null);
 
     try {
-      const walletClient = createWalletClientForProvider(walletProvider);
       const [account] = await walletClient.getAddresses();
 
-      // Simulate the transaction first
+      if (!publicClient) {
+        throw new Error('Public client not available');
+      }
+
       const { request } = await publicClient.simulateContract({
         address: contractAddress,
         abi,
@@ -40,16 +41,13 @@ export function useTransaction() {
         value,
       });
 
-      // Execute the transaction
       const hash = await walletClient.writeContract(request as any);
 
-      // Wait for confirmation
       const receipt = await publicClient.waitForTransactionReceipt({
         hash,
         confirmations: 1,
       });
 
-      // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['pools'] });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
 
