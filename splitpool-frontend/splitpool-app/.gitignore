@@ -5,6 +5,7 @@ node_modules/
 
 # Expo
 .expo/
+# Ensure Expo local state ignored (device history, server settings)
 dist/
 web-build/
 expo-env.d.ts

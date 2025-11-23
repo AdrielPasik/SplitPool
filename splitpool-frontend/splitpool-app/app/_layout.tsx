@@ -1,7 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ErrorBoundary } from '../components/shared/ErrorBoundary';
+import { View, ActivityIndicator } from 'react-native';
 // WalletConnect placeholder: adjust to proper Web3Modal RN package
 
 // TODO: Integrate Web3Modal React Native package (e.g. '@web3modal/wagmi-react-native')
@@ -28,6 +30,14 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <StatusBar style="auto" />
+      <ErrorBoundary>
+        <Suspense
+          fallback={
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <ActivityIndicator size="large" />
+            </View>
+          }
+        >
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
@@ -88,6 +98,8 @@ export default function RootLayout() {
           }} 
         />
       </Stack>
+        </Suspense>
+      </ErrorBoundary>
     </QueryClientProvider>
   );
 }
