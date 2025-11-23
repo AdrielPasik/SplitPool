@@ -5,19 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '../components/shared/ErrorBoundary';
 import { View, ActivityIndicator } from 'react-native';
 import { WagmiConfig } from 'wagmi';
-import { baseSepolia } from 'wagmi/chains';
-import { createWeb3Modal, defaultWagmiConfig, Web3Modal } from '@web3modal/wagmi-react-native';
-
-const projectId = process.env.EXPO_PUBLIC_WALLETCONNECT_PROJECT_ID || '';
-const metadata = {
-  name: 'SplitPool',
-  description: 'Split bills, settle on-chain',
-  url: 'https://splitpool.app',
-  icons: ['https://splitpool.app/icon.png'],
-};
-const chains = [baseSepolia];
-const wagmiConfig = defaultWagmiConfig({ chains, projectId, metadata });
-createWeb3Modal({ projectId, chains, wagmiConfig });
+import { AppKitProvider, AppKit } from '@reown/appkit-react-native';
+import { appKit, wagmiConfig } from '../AppKitConfig';
 
 // Create QueryClient
 const queryClient = new QueryClient({
@@ -37,9 +26,10 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <WagmiConfig config={wagmiConfig}>
-      <StatusBar style="auto" />
-      <ErrorBoundary>
+      <AppKitProvider instance={appKit}>
+        <WagmiConfig config={wagmiConfig}>
+          <StatusBar style="auto" />
+          <ErrorBoundary>
         <Suspense
           fallback={
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -108,9 +98,10 @@ export default function RootLayout() {
         />
       </Stack>
         </Suspense>
-      </ErrorBoundary>
-      <Web3Modal />
-      </WagmiConfig>
+          </ErrorBoundary>
+          <AppKit />
+        </WagmiConfig>
+      </AppKitProvider>
     </QueryClientProvider>
   );
 }

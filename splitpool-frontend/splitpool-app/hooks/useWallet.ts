@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useWeb3Modal } from '@web3modal/wagmi-react-native';
+import { useAppKit } from '@reown/appkit-react-native';
 import { useAccount, useDisconnect, useWalletClient } from 'wagmi';
 import { useWalletStore } from '../store/wallet';
 import type { Address } from '../types/models';

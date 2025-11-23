@@ -1,1 +1,2 @@
-declare module '@web3modal/wagmi-react-native';
+// web3modal types removed — Reown AppKit is used instead
+export {};
